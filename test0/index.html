@@ -1,0 +1,187 @@
+<html>
+
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Simple markers</title>
+    
+    <script src="jquery.min.js"></script>
+    <script src="howler.core.js"></script>
+    
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 80%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+
+<body>
+
+
+    <div id="map"></div>
+    <div id="log"></div>
+    <script>
+	var map;
+	var contador=1;
+	var current_loc=null;
+	
+	coord_test1={lat:-34.57079104505985,lng:-58.42158211708829};
+	coord_test2={lat:-34.56961606158244,lng:-58.41687215805814};
+	coord_test3={lat:-34.57269925352223,lng:-58.416979446418736};
+		
+	var markers=[];
+	var sounds=[];
+	
+	function agregar_marker(coord){
+		marker = new google.maps.Marker({
+		position: coord,
+		icon: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld='+contador+'|226256|000000',
+		map: map,});
+		contador+=1;
+		markers.push(marker);
+	}
+     function initMap() {
+        var myLatLng = {lat: -34.571091, lng: -58.418283};
+		
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 17,
+          center: myLatLng,
+          clickableIcons: false ,
+        });
+        
+          var remove_poi = [
+			{
+			  "featureType": "poi",
+			  "elementType": "labels",
+			  "stylers": [
+				{ "visibility": "off" }
+			  ]
+			}
+		  ]
+
+		map.setOptions({styles: remove_poi})
+
+        current_loc = new google.maps.Marker({
+          position: myLatLng,
+          map: map,
+ 
+        });
+        
+        
+       map.addListener('click', function(e) {
+		   lat=e.latLng.lat();
+		   lng=e.latLng.lng();
+		   
+			//~ $("#log").html(lat+"|"+lng);
+			
+			current_loc.setMap(null);
+			
+			current_loc = new google.maps.Marker({
+				position: {lat:lat,lng:lng},
+				map: map,});
+			
+			
+       });
+       
+       // inicializo markers
+       	agregar_marker(coord_test1);
+		agregar_marker(coord_test2);
+		agregar_marker(coord_test3);
+		
+		// inicializo audios
+		initilize_audio()
+       
+       setInterval(function(){
+			lat=current_loc.position.lat();
+			lng=current_loc.position.lng();
+			
+			current_loc.setPosition({lat:lat+0.00001,lng:lng})
+			recompute_volumen_for_every_source()
+		}, 1000);
+       
+
+
+      }
+      
+     function initilize_audio(){
+     //~ https://goldfirestudios.com/blog/104/howler.js-Modern-Web-Audio-Javascript-Library
+		var sound1 = new Howl({
+		  src: ['a.mp3', ],
+		  autoplay: true,
+		  loop: true,
+		  volume: 0,
+		  onend: function() {
+			// alert('Finished!');
+		  }
+		});
+
+		var sound2 = new Howl({
+		  src: ['b.mp3', ],
+		  autoplay: true,
+		  loop: true,
+		  volume: 0,
+		  onend: function() {
+			// alert('Finished!');
+		  }
+		});
+		var sound3 = new Howl({
+		  src: ['c.mp3', ],
+		  autoplay: true,
+		  loop: true,
+		  volume: 0,
+		  onend: function() {
+			// alert('Finished!');
+		  }
+		});
+
+		sounds.push(sound1)
+		sounds.push(sound2)
+		sounds.push(sound3)
+}
+ 
+      function distance_between_points(m1,m2){
+		//~ distance=1000000*((current_loc.position.lat()-mar.position.lat())**2+(current_loc.position.lng()-mar.position.lng())**2)**0.5
+		distance=50000*((m1.position.lat()-m2.position.lat())**2+(m1.position.lng()-m2.position.lng())**2)**0.5
+		return distance	
+	  }
+	  
+      function recompute_volumen_for_every_source(){
+		  _log=""
+		  for (i=0;i<markers.length;i=i+1){
+			  mar=markers[i];
+			  sound=sounds[i];
+			  distance=distance_between_points(mar,current_loc);
+			  
+			  new_volume= (1/distance)**0.4;
+			  
+			  _log+="<br>Marker:"+i + " | distance: "+distance+" |volumen: "+new_volume;
+			  sounds[i].volume(new_volume);
+		  }
+		  $("#log").html(_log)
+	  }
+      
+ 
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDroDQIJVqnWRJKRRO5dk8r2kxAnH_1B88&callback=initMap">
+    </script>
+
+
+<script>
+
+
+
+</script>
+
+</body>
+
+
+</html>
